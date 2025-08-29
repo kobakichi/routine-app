@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 255 255 255;
+  --fg: 15 23 42;
+}
+
+.dark {
+  --bg: 2 6 23;
+  --fg: 226 232 240;
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+}
+
+
+/* OSカーソルを常に非表示（全要素に適用） */
+
+.glass {
+  @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-glass;
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 focus:outline-none ring-1 ring-slate-300/50 dark:ring-slate-700/50 active:scale-[0.98];
+}
+
+.btn-primary {
+  @apply text-white hover:opacity-90;
+}
+
+.btn-ghost {
+  @apply bg-transparent hover:bg-black/5 dark:hover:bg-white/5;
+}
+
+.input {
+  @apply w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-blue-400/30 dark:ring-blue-500/30;
+}
+
+.card {
+  @apply glass rounded-xl p-4;
+}
+
+/* Aurora アニメーション */
+@keyframes auroraFloat1 {
+  0%   { transform: translate(-8%, -6%) scale(1); }
+  100% { transform: translate(6%, 4%) scale(1.15); }
+}
+@keyframes auroraFloat2 {
+  0%   { transform: translate(5%, 4%) scale(1); }
+  100% { transform: translate(-6%, -5%) scale(1.2); }
+}
+@keyframes auroraFloat3 {
+  0%   { transform: translate(3%, -3%) scale(1.05); }
+  100% { transform: translate(-4%, 5%) scale(1.18); }
+}
+
+.gradient-title {
+  @apply bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent;
+}
+
+/* 2行まで表示して省略 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

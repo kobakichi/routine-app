@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String?
+  routines Routine[]
+  createdAt DateTime @default(now())
+}
+
+model Routine {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  title     String
+  color     String        @default("slate")
+  checks    RoutineCheck[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model RoutineCheck {
+  id        Int      @id @default(autoincrement())
+  routineId Int
+  date      DateTime
+  completed Boolean  @default(true)
+  note      String?
+
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@unique([routineId, date])
+  @@index([date])
+}
+
