@@ -1,22 +1,52 @@
-# Routine App (Next.js + Prisma + MySQL)
+<div align="center">
 
-A minimal, modern habit-tracking app scaffold. Built with Next.js (App Router) + Tailwind CSS + Prisma (MySQL). It ships a clean UI, dark mode, Google sign-in, and basic streak/history views.
+  <h1>Routine App</h1>
+  <p>A tiny, modern habit tracker built with Next.js + Prisma.</p>
+
+  <p>
+    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs" />
+    <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" />
+    <img alt="MySQL" src="https://img.shields.io/badge/DB-MySQL-00758F?logo=mysql&logoColor=white" />
+    <img alt="NextAuth" src="https://img.shields.io/badge/Auth-NextAuth-3C3C3C?logo=auth0&logoColor=white" />
+    <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwindcss&logoColor=white" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
+  </p>
+
+  <p>
+    <sub>Dark mode, Google sign‑in, streaks, and a monthly calendar — all in a lightweight starter.</sub>
+  </p>
+
+</div>
+
+---
+
+A minimal, modern habit‑tracking app scaffold. Built with Next.js (App Router) + Tailwind CSS + Prisma (MySQL). It ships a clean UI, dark mode, Google sign‑in, and basic streak/history views.
 
 ## Features
 
-- Google sign-in with NextAuth (JWT session)
-- User‑scoped routines API (ownership checks)
-- Add/delete routines, toggle today’s completion, streak calculation
-- History visualization (inline last 4 weeks) and a monthly calendar page
-- Dark/light/system theme toggle
-- Avatar upload (local filesystem) with fallback to Google profile image or initials
+| ✨ Focused | 🔐 Authentication |
+| --- | --- |
+| Add/delete routines, toggle today, and track streaks without bloat. | Google sign‑in with NextAuth (JWT session), user‑scoped data, ownership checks. |
+
+| 📅 Calendar | 🌓 Theming |
+| --- | --- |
+| Monthly calendar view + inline last‑4‑weeks history chain. | Light/dark/system theme toggle that persists. |
+
+| 🖼️ Avatar Upload | ⚙️ DX |
+| --- | --- |
+| Upload JPG/PNG/WEBP/GIF (≤ 5MB). Fallback to Google image or initials. | TypeScript, Prisma, and a tidy API using Next.js Route Handlers. |
 
 ## Tech Stack
 
-- Next.js 14 (App Router), React 18, Tailwind CSS
-- Prisma ORM + MySQL (via Docker by default)
-- NextAuth v4 (Google provider)
-- API: Next.js Route Handlers (`app/api/*`)
+<p>
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs" />
+  <img alt="React" src="https://img.shields.io/badge/React-18-20232A?logo=react&logoColor=61DAFB" />
+  <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwindcss&logoColor=white" />
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" />
+  <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8-00758F?logo=mysql&logoColor=white" />
+  <img alt="NextAuth" src="https://img.shields.io/badge/NextAuth-v4-3C3C3C?logo=auth0&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
+</p>
 
 ## Quick Start (Docker MySQL)
 
