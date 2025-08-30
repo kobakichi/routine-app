@@ -18,16 +18,17 @@ export default function AuthButton() {
   const menuRef = useRef<HTMLDivElement>(null)
   const [avatarError, setAvatarError] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined)
-  const [editOpen, setEditOpen] = useState(false)
-  const [newUrl, setNewUrl] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!ref.current) return
       if (!ref.current.contains(e.target as Node)) setOpen(false)
     }
-    function onDocKey(e: KeyboardEvent) { if (e.key === 'Escape') { setOpen(false); setEditOpen(false) } }
+    function onDocKey(e: KeyboardEvent) { if (e.key === 'Escape') { setOpen(false); setUploadOpen(false) } }
     if (open) {
       document.addEventListener('mousedown', onDocClick)
       document.addEventListener('keydown', onDocKey)
@@ -76,19 +77,34 @@ export default function AuthButton() {
     return <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
   }
 
-  async function saveAvatar() {
-    setSaving(true)
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] || null
+    setSelectedFile(f)
+    setPreview(f ? URL.createObjectURL(f) : null)
+  }
+
+  async function uploadAvatar() {
+    if (!selectedFile) return
+    setUploading(true)
     try {
-      const body = { image: newUrl.trim() }
-      const res = await fetch('/api/user/avatar', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (!res.ok) return
+      const fd = new FormData()
+      fd.append('file', selectedFile)
+      const res = await fetch('/api/user/avatar/upload', { method: 'POST', body: fd })
+      if (!res.ok) {
+        let msg = 'アップロードに失敗しました'
+        try { const j = await res.json(); if (j?.message) msg = j.message } catch {}
+        alert(msg)
+        return
+      }
       const json = await res.json()
-      setAvatarUrl(json.image || undefined)
+      setAvatarUrl(json.image)
       setAvatarError(false)
-      setEditOpen(false)
+      setUploadOpen(false)
       setOpen(false)
+      setSelectedFile(null)
+      setPreview(null)
     } finally {
-      setSaving(false)
+      setUploading(false)
     }
   }
 
@@ -129,21 +145,27 @@ export default function AuthButton() {
           onBlur={onMenuBlur}
         >
           <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400 truncate" title={name}>{name}</div>
-          <button className="btn btn-ghost w-full justify-start" onClick={() => setEditOpen(true)}>アバターを変更</button>
+          <button className="btn btn-ghost w-full justify-start" onClick={() => setUploadOpen(true)}>画像をアップロード</button>
           <button className="btn btn-ghost w-full justify-start" onClick={() => signOut()}>ログアウト</button>
         </div>
       )}
 
-      {editOpen && (
+      {uploadOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setEditOpen(false)} />
+          <div className="absolute inset-0 bg-black/30" onClick={() => setUploadOpen(false)} />
           <div className="relative z-10 card w-[90%] max-w-md p-4">
-            <h3 className="text-sm font-semibold mb-2">アバターURLを設定</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">画像のURL(https://)を入力。空欄でデフォルトに戻ります。</p>
-            <input className="input mb-3" placeholder="https://example.com/avatar.png" value={newUrl} onChange={e => setNewUrl(e.target.value)} />
-            <div className="flex items-center justify-end gap-2">
-              <button className="btn btn-ghost" onClick={() => setEditOpen(false)}>キャンセル</button>
-              <button className="btn btn-primary" disabled={saving} onClick={saveAvatar}>{saving ? '保存中…' : '保存'}</button>
+            <h3 className="text-sm font-semibold mb-2">画像をアップロード</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">対応: JPG/PNG/WEBP/GIF、最大 5MB</p>
+            <input type="file" accept="image/*" onChange={onFileChange} />
+            {preview && (
+              <div className="mt-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={preview} alt="preview" className="max-h-40 rounded-md" />
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-2 mt-4">
+              <button className="btn btn-ghost" onClick={() => { setUploadOpen(false); setSelectedFile(null); setPreview(null) }}>キャンセル</button>
+              <button className="btn btn-primary" disabled={!selectedFile || uploading} onClick={uploadAvatar}>{uploading ? 'アップロード中…' : 'アップロード'}</button>
             </div>
           </div>
         </div>
