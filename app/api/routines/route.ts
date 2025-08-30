@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireUser } from '@/lib/auth-helpers'
 import { toISODate } from '@/lib/date'
 
 function todayRange() {
@@ -10,11 +11,12 @@ function todayRange() {
   return { start, end }
 }
 
-const USER_ID = 1 // 仮ユーザー（認証導入前）
-
 export async function GET() {
+  const { user, error } = await requireUser()
+  if (error) return error
+
   const routines = await prisma.routine.findMany({
-    where: { userId: USER_ID },
+    where: { userId: user!.id },
     orderBy: { id: 'asc' },
   })
 
@@ -66,6 +68,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { user, error } = await requireUser()
+  if (error) return error
+
   const body = await req.json().catch(() => ({}))
   const title = typeof body.title === 'string' ? body.title.trim() : ''
   const color = typeof body.color === 'string' ? body.color : 'blue'
@@ -77,13 +82,6 @@ export async function POST(req: NextRequest) {
   ])
   const c = allowed.has(color) ? color : 'blue'
 
-  // 仮ユーザーを未作成の場合に自動作成（外部キー制約対策）
-  await prisma.user.upsert({
-    where: { id: USER_ID },
-    update: {},
-    create: { id: USER_ID, email: 'demo@example.com', name: 'Demo' },
-  })
-
-  const created = await prisma.routine.create({ data: { title, color: c, userId: USER_ID } })
+  const created = await prisma.routine.create({ data: { title, color: c, userId: user!.id } })
   return NextResponse.json({ id: created.id })
 }

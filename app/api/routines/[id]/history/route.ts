@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { toISODate } from '@/lib/date'
+import { requireUser } from '@/lib/auth-helpers'
 
 function startOfTodayLocal(): Date {
   const d = new Date()
@@ -9,8 +10,13 @@ function startOfTodayLocal(): Date {
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { user, error } = await requireUser()
+  if (error) return error
   const id = Number(params.id)
   if (!Number.isInteger(id)) return NextResponse.json({ message: 'invalid id' }, { status: 400 })
+
+  const own = await prisma.routine.findFirst({ where: { id, userId: user!.id }, select: { id: true } })
+  if (!own) return NextResponse.json({ message: 'not found' }, { status: 404 })
 
   const { searchParams } = new URL(req.url)
   const fromParam = searchParams.get('from') // YYYY-MM-DD (inclusive)

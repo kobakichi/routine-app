@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
+import AuthButton from '@/components/AuthButton'
+import { signIn } from 'next-auth/react'
 
 type RoutineLite = { id: number; title: string; color: string }
 
@@ -15,12 +17,16 @@ export default function CalendarPage() {
   const [month, setMonth] = useState(() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d })
   const [history, setHistory] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(false)
+  const [unauthorized, setUnauthorized] = useState(false)
 
   useEffect(() => {
     async function loadRoutines() {
       const res = await fetch('/api/routines', { cache: 'no-store' })
-      const json = await res.json()
-      const list = (json.routines as any[]).map(r => ({ id: r.id, title: r.title, color: r.color }))
+      if (res.status === 401) { setUnauthorized(true); return }
+      if (!res.ok) { console.error('Failed to load routines'); return }
+      let json: any
+      try { json = await res.json() } catch { console.error('Invalid JSON for routines'); return }
+      const list = Array.isArray(json.routines) ? (json.routines as any[]).map(r => ({ id: r.id, title: r.title, color: r.color })) : []
       setRoutines(list)
       if (list.length && rid == null) setRid(list[0].id)
     }
@@ -35,9 +41,11 @@ export default function CalendarPage() {
         const from = toISO(startOfMonth(month))
         const to = toISO(endOfMonth(month))
         const res = await fetch(`/api/routines/${rid}/history?from=${from}&to=${to}`, { cache: 'no-store' })
-        const json = await res.json()
+        if (!res.ok) return
+        let json: any
+        try { json = await res.json() } catch { return }
         const map: Record<string, boolean> = {}
-        for (const h of json.history as { date: string; completed: boolean }[]) map[h.date] = h.completed
+        for (const h of (json.history as { date: string; completed: boolean }[]) || []) map[h.date] = h.completed
         setHistory(map)
       } finally {
         setLoading(false)
@@ -56,9 +64,17 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2">
           <a href="/" className="btn btn-ghost">戻る</a>
           <ThemeToggle />
+          <span className="inline-block h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+          <AuthButton />
         </div>
       </header>
 
+      {unauthorized ? (
+        <div className="card mb-4">
+          <p className="text-slate-600 dark:text-slate-300 mb-3">カレンダーを表示するにはログインしてください。</p>
+          <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
+        </div>
+      ) : (
       <div className="card mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <button className="btn btn-ghost" onClick={() => setMonth(prev => addMonths(prev, -1))}>{'←'}</button>
@@ -74,15 +90,18 @@ export default function CalendarPage() {
           </select>
         </div>
       </div>
+      )}
 
-      <section className="card">
-        <WeekHeader />
-        {loading ? (
-          <div className="text-slate-500">読み込み中...</div>
-        ) : (
-          <MonthGrid days={days} history={history} color={currentColor} month={month} />
-        )}
-      </section>
+      {!unauthorized && (
+        <section className="card">
+          <WeekHeader />
+          {loading ? (
+            <div className="text-slate-500">読み込み中...</div>
+          ) : (
+            <MonthGrid days={days} history={history} color={currentColor} month={month} />
+          )}
+        </section>
+      )}
     </main>
   )
 }

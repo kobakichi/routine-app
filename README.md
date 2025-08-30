@@ -90,9 +90,38 @@ npm run dev
 - `Routine` … 習慣(タイトル/色/ユーザー)
 - `RoutineCheck` … その日付の完了記録（一意: routineId + date）
 
+## Google 認証の設定（NextAuth）
+
+このアプリは NextAuth を用いた Google ログインに対応しています。
+
+1. Google Cloud Console で OAuth2 クライアントIDを発行
+   - 認証情報 > 認証情報を作成 > OAuth クライアントID（種類: Web）
+   - 承認済みのリダイレクトURIに `http://localhost:3000/api/auth/callback/google` を追加
+2. `.env` を設定
+
+```bash
+cp .env.example .env
+# NEXTAUTH_SECRET は十分に長いランダム文字列に置き換え
+# GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET を設定
+```
+
+3. 開発サーバーを再起動し、画面右上の「Googleでログイン」からサインイン
+
+API はユーザー単位で保護され、ログインユーザーのメールアドレスに紐づく `User` レコードが自動作成・利用されます。
+
+## アバター画像の変更
+
+- 右上のユーザーメニュー →「アバターを変更」から、画像のURL(https://)を登録できます。
+- Googleから提供される画像より、アプリ内に保存したURLが優先されます。
+- 初回はDBスキーマ更新が必要です（`User.image`列追加）。以下を実行してください。
+
+```bash
+npm run prisma:migrate -- --name add_user_image
+```
+
 ## 今後の拡張案
 
-- 認証(NextAuth等)の導入 → 複数ユーザー本番運用
+- 認証周りの細かな調整（プロフィール編集、画像、ロール）
 - 週/月ビューや連続達成日数の可視化
 - 通知/リマインダー(ブラウザ通知, メール等)
 - 並び替え、タグ、メモ機能

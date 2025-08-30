@@ -13,6 +13,8 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
+.envrc
 
 # Prisma
 prisma/dev.db
@@ -25,6 +27,8 @@ yarn-error.log*
 pnpm-debug.log*
 .next-dev.log*
 .next-dev.pid*
+*.log
+*.pid
 
 # OS / Editor
 .DS_Store

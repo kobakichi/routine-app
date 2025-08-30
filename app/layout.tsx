@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import ThemeClient from '@/components/ThemeClient'
+import AuthProvider from '@/components/AuthProvider'
 const ThreeBackground = dynamic(() => import('@/components/ThreeBackground'), { ssr: false })
 
 export const metadata = {
@@ -24,9 +25,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <div className="relative min-h-screen">
           <ThemeClient />
           <ThreeBackground />
-          <div className="relative z-10">
-            {children}
-          </div>
+          <AuthProvider>
+            <div className="relative z-10">
+              {children}
+            </div>
+          </AuthProvider>
         </div>
       </body>
     </html>

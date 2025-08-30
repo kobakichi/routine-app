@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { buttonGradientFor, ColorName } from '@/lib/colors'
+import AuthButton from '@/components/AuthButton'
+import { signIn } from 'next-auth/react'
 import ThemeToggle from '@/components/ThemeToggle'
 
 type Routine = {
@@ -15,6 +17,7 @@ type Routine = {
 export default function Page() {
   const [routines, setRoutines] = useState<Routine[]>([])
   const [loading, setLoading] = useState(true)
+  const [unauthorized, setUnauthorized] = useState(false)
   const [title, setTitle] = useState('')
   const [color, setColor] = useState<ColorName>('blue')
   const [busy, setBusy] = useState(false)
@@ -23,8 +26,28 @@ export default function Page() {
   const load = async () => {
     setLoading(true)
     const res = await fetch('/api/routines', { cache: 'no-store' })
-    const data = await res.json()
-    setRoutines(data.routines)
+    if (res.status === 401) {
+      setUnauthorized(true)
+      setRoutines([])
+      setLoading(false)
+      return
+    }
+    if (!res.ok) {
+      console.error('Failed to load /api/routines', res.status)
+      setRoutines([])
+      setLoading(false)
+      return
+    }
+    let data: any
+    try {
+      data = await res.json()
+    } catch (e) {
+      console.error('Invalid JSON from /api/routines')
+      setRoutines([])
+      setLoading(false)
+      return
+    }
+    setRoutines(Array.isArray(data?.routines) ? data.routines : [])
     setLoading(false)
   }
 
@@ -43,7 +66,19 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, color }),
       })
-      if (!res.ok) throw new Error('failed')
+      if (res.status === 401) {
+        setUnauthorized(true)
+        return
+      }
+      if (!res.ok) {
+        let message = '登録に失敗しました'
+        try {
+          const j = await res.json()
+          if (typeof j?.message === 'string') message = j.message
+        } catch {}
+        alert(message)
+        return
+      }
       setTitle('')
       await load()
     } finally {
@@ -92,6 +127,8 @@ export default function Page() {
         <div className="flex items-center gap-2">
           <a href="/calendar" className="btn btn-ghost">カレンダー</a>
           <ThemeToggle />
+          <span className="inline-block h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+          <AuthButton />
         </div>
       </header>
 
@@ -103,18 +140,25 @@ export default function Page() {
             placeholder="例: 朝のストレッチ"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') addRoutine() }}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addRoutine() }}
           />
           <button
             className={`btn btn-primary ${buttonGradientFor(color)} text-white`}
             onClick={addRoutine}
             disabled={!canSubmit}
+            title="クリックまたは Ctrl(⌘)+Enter で追加"
+            aria-keyshortcuts="Control+Enter Meta+Enter"
           >追加</button>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {loading ? (
+        {unauthorized ? (
+          <div className="text-slate-600 dark:text-slate-300 space-y-3">
+            <p>ルーティーンを表示するにはログインしてください。</p>
+            <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
+          </div>
+        ) : loading ? (
           <div className="text-slate-500">読み込み中...</div>
         ) : routines.length === 0 ? (
           <div className="text-slate-500">まだルーティーンがありません。上で追加してみましょう。</div>
