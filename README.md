@@ -6,7 +6,7 @@
   <p>
     <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs" />
     <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" />
-    <img alt="MySQL" src="https://img.shields.io/badge/DB-MySQL-00758F?logo=mysql&logoColor=white" />
+    <img alt="PostgreSQL" src="https://img.shields.io/badge/DB-PostgreSQL-336791?logo=postgresql&logoColor=white" />
     <img alt="NextAuth" src="https://img.shields.io/badge/Auth-NextAuth-3C3C3C?logo=auth0&logoColor=white" />
     <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwindcss&logoColor=white" />
     <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
@@ -20,7 +20,7 @@
 
 ---
 
-A minimal, modern habit‑tracking app scaffold. Built with Next.js (App Router) + Tailwind CSS + Prisma (MySQL). It ships a clean UI, dark mode, Google sign‑in, and basic streak/history views.
+A minimal, modern habit‑tracking app scaffold. Built with Next.js (App Router) + Tailwind CSS + Prisma (PostgreSQL). It ships a clean UI, dark mode, Google sign‑in, and basic streak/history views.
 
 ## Features
 
@@ -43,12 +43,12 @@ A minimal, modern habit‑tracking app scaffold. Built with Next.js (App Router)
   <img alt="React" src="https://img.shields.io/badge/React-18-20232A?logo=react&logoColor=61DAFB" />
   <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwindcss&logoColor=white" />
   <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" />
-  <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8-00758F?logo=mysql&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white" />
   <img alt="NextAuth" src="https://img.shields.io/badge/NextAuth-v4-3C3C3C?logo=auth0&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
 </p>
 
-## Quick Start (Docker MySQL)
+## Quick Start (Docker PostgreSQL)
 
 1) Install dependencies
 
@@ -60,7 +60,7 @@ npm i
 
 ```bash
 cp .env.example .env
-# Default DATABASE_URL points to Docker MySQL (localhost:3307)
+# Default DATABASE_URL points to Docker PostgreSQL (localhost:5433)
 ```
 
 3) Start DB (Docker)
@@ -90,9 +90,9 @@ npm run dev
 - App: http://localhost:3000
 - Calendar: http://localhost:3000/calendar
 
-## Using your own MySQL (no Docker)
+## Using your own PostgreSQL (no Docker)
 
-1) Update `DATABASE_URL` in `.env` to your MySQL instance (e.g., `mysql://USER:PASS@localhost:3306/DB`)
+1) Update `DATABASE_URL` in `.env` to your PostgreSQL instance (e.g., `postgresql://USER:PASS@localhost:5432/DB?schema=public`)
 2) Ensure DB is running
 3) Generate and migrate
 
@@ -106,7 +106,7 @@ npm run dev
 
 Put these in `.env` (see `.env.example`):
 
-- `DATABASE_URL` – MySQL connection string
+- `DATABASE_URL` – PostgreSQL connection string
 - `NEXTAUTH_URL` – e.g., `http://localhost:3000` in dev
 - `NEXTAUTH_SECRET` – long random string (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` – from Google Cloud Console
@@ -136,10 +136,27 @@ All API endpoints are protected and scoped to the signed‑in user. A `User` rec
 - `npm run prisma:generate` – generate Prisma Client
 - `npm run prisma:migrate` – apply/create migrations in dev
 - `npm run prisma:studio` – Prisma Studio
-- `npm run db:up` / `npm run db:down` / `npm run db:logs` – Docker MySQL helpers
+- `npm run db:up` / `npm run db:down` / `npm run db:logs` – Docker PostgreSQL helpers
 
 ## Notes & Hardening
 
 - Upload validation includes MIME/type and size checks. For stricter validation, add magic‑byte detection (e.g., `file-type`) and server‑side resize (e.g., `sharp`).
 - Set `NEXTAUTH_URL` to your production domain when deploying.
 - If you ever committed `.env` by mistake, rotate secrets and purge from history.
+
+## Switching from MySQL to PostgreSQL
+
+This repo now targets PostgreSQL. If you previously ran MySQL locally:
+
+- Stop and remove the old DB: `npm run db:down`
+- Update `.env` → `DATABASE_URL=postgresql://postgres:postgres@localhost:5433/routine_app?schema=public`
+- Start PostgreSQL: `npm run db:up`
+- Initialize schema: `npm run prisma:migrate -- --name init_postgres`
+  - Alternatively for quick dev: `npx prisma db push`
+- Regenerate client (if needed): `npm run prisma:generate`
+
+For Neon (hosted Postgres): use its connection string, typically
+
+```
+postgresql://USER:PASSWORD@ep-XXXX.neon.tech/DB?sslmode=require&pgbouncer=true
+```
