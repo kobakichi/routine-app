@@ -1,131 +1,115 @@
 # Routine App (Next.js + Prisma + MySQL)
 
-1日のルーティーン（習慣）をシンプルに管理するモダンなWebアプリの骨組みです。Next.js(App Router) + Tailwind CSS + Prisma(MySQL)構成で、おしゃれなグラデーションUIとダークモードを備えています。
+A minimal, modern habit-tracking app scaffold. Built with Next.js (App Router) + Tailwind CSS + Prisma (MySQL). It ships a clean UI, dark mode, Google sign-in, and basic streak/history views.
 
-## 前提
+## Features
 
-- Node.js 18 以上推奨
-- パッケージマネージャは `npm` を想定（`pnpm`/`yarn` でも可）
+- Google sign-in with NextAuth (JWT session)
+- User‑scoped routines API (ownership checks)
+- Add/delete routines, toggle today’s completion, streak calculation
+- History visualization (inline last 4 weeks) and a monthly calendar page
+- Dark/light/system theme toggle
+- Avatar upload (local filesystem) with fallback to Google profile image or initials
 
-## クイックスタート（Docker で MySQL を起動）
+## Tech Stack
 
-1. 依存関係をインストール
+- Next.js 14 (App Router), React 18, Tailwind CSS
+- Prisma ORM + MySQL (via Docker by default)
+- NextAuth v4 (Google provider)
+- API: Next.js Route Handlers (`app/api/*`)
+
+## Quick Start (Docker MySQL)
+
+1) Install dependencies
 
 ```bash
-cd routine-app
 npm i
 ```
 
-2. 環境変数を設定
+2) Configure env
 
 ```bash
 cp .env.example .env
-# 既定は Docker の MySQL (localhost:3307)
-# 例: mysql://root:password@localhost:3307/routine_app
+# Default DATABASE_URL points to Docker MySQL (localhost:3307)
 ```
 
-3. DB を起動（Docker）
+3) Start DB (Docker)
 
 ```bash
 npm run db:up
-# （任意）ログ監視: npm run db:logs
+# Optional: follow logs → npm run db:logs
 ```
 
-4. Prisma クライアント生成 & 初回マイグレーション
+4) Generate Prisma Client and apply migrations
 
 ```bash
 npm run prisma:generate
-npm run prisma:migrate -- --name init
+npm run prisma:migrate
+# If this is your first setup and no migrations exist yet,
+# Prisma will prompt you to create an initial migration.
 ```
 
-5. 開発サーバー起動
+5) Start the dev server
 
 ```bash
 npm run dev
 ```
 
-6. ブラウザで確認
+6) Open the app
 
-- トップ: http://localhost:3000
-- カレンダー: http://localhost:3000/calendar
+- App: http://localhost:3000
+- Calendar: http://localhost:3000/calendar
 
-## 既存の MySQL を使う場合（Docker 不使用）
+## Using your own MySQL (no Docker)
 
-1. `.env` の `DATABASE_URL` を実環境に合わせて修正（例: `mysql://USER:PASS@localhost:3306/DB`）
-2. DB を起動（自身の MySQL サーバー）
-3. Prisma 生成・マイグレーションを実行
+1) Update `DATABASE_URL` in `.env` to your MySQL instance (e.g., `mysql://USER:PASS@localhost:3306/DB`)
+2) Ensure DB is running
+3) Generate and migrate
 
 ```bash
-cd routine-app
 npm run prisma:generate
-npm run prisma:migrate -- --name init
+npm run prisma:migrate
 npm run dev
 ```
 
-## トラブルシュート
+## Environment Variables
 
-- Docker に接続できない: Docker Desktop を起動し、`npm run db:up` を再実行
-- ポート競合: `.env` と `docker-compose.yml` のポート（既定: 3307）を合わせる
-- マイグレーション失敗: DB 起動を確認（`npm run db:logs`）し、再度 `npm run prisma:migrate`
+Put these in `.env` (see `.env.example`):
 
-## 機能（概要）
+- `DATABASE_URL` – MySQL connection string
+- `NEXTAUTH_URL` – e.g., `http://localhost:3000` in dev
+- `NEXTAUTH_SECRET` – long random string (generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` – from Google Cloud Console
 
-- ルーティーン一覧の取得/追加/削除
-- 今日の完了トグル（オン/オフ）＋ 連続日数（streak）表示
-- 履歴の可視化
-- カード展開時: 直近4週間のチェーン（週頭=日曜）
-- 専用ページ: 月カレンダー（/calendar）で日次の達成状況を表示
-- テーマ: ライト/ダーク/システムに対応（各ページ右上トグル）
+## Google OAuth (NextAuth)
 
-## 技術スタック
+1) In Google Cloud Console, create OAuth consent screen (External, test mode is fine) and add your Google account as a test user
+2) Create OAuth client credentials (Web application)
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+   - Authorized JavaScript origins: `http://localhost:3000`
+3) Set the credentials in `.env` and restart the dev server
+4) Sign in from the top‑right “Sign in with Google” button
 
-- フロント: Next.js 14(App Router), React 18, Tailwind CSS
-- スタイリング: ガラスモーフィズム風カード、控えめなカラーアクセント
-- データ: Prisma ORM + MySQL
-- API: Next.js Route Handlers (`app/api/*`)
+All API endpoints are protected and scoped to the signed‑in user. A `User` record is created/updated on first access.
 
-## データモデル(要約)
+## Avatar Uploads (local)
 
-- `User` … 将来的な認証用（現在は未使用）
-- `Routine` … 習慣(タイトル/色/ユーザー)
-- `RoutineCheck` … その日付の完了記録（一意: routineId + date）
+- Open the user menu (top‑right) → “Upload Image” to upload JPG/PNG/WEBP/GIF up to 5MB
+- Files are saved under `public/uploads/avatars/<userId>/...` (excluded from Git by `.gitignore`)
+- Uploaded image takes precedence over the Google profile image; fallback is initials
+- Note: local filesystem uploads are not suitable for serverless production. Use S3/Cloudinary/etc. in such deployments.
 
-## Google 認証の設定（NextAuth）
+## Scripts
 
-このアプリは NextAuth を用いた Google ログインに対応しています。
+- `npm run dev` – start Next.js dev server
+- `npm run build` / `npm start` – production build/run
+- `npm run prisma:generate` – generate Prisma Client
+- `npm run prisma:migrate` – apply/create migrations in dev
+- `npm run prisma:studio` – Prisma Studio
+- `npm run db:up` / `npm run db:down` / `npm run db:logs` – Docker MySQL helpers
 
-1. Google Cloud Console で OAuth2 クライアントIDを発行
-   - 認証情報 > 認証情報を作成 > OAuth クライアントID（種類: Web）
-   - 承認済みのリダイレクトURIに `http://localhost:3000/api/auth/callback/google` を追加
-2. `.env` を設定
+## Notes & Hardening
 
-```bash
-cp .env.example .env
-# NEXTAUTH_SECRET は十分に長いランダム文字列に置き換え
-# GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET を設定
-```
-
-3. 開発サーバーを再起動し、画面右上の「Googleでログイン」からサインイン
-
-API はユーザー単位で保護され、ログインユーザーのメールアドレスに紐づく `User` レコードが自動作成・利用されます。
-
-## アバター画像のアップロード
-
-- 右上のユーザーメニュー →「画像をアップロード」から画像ファイル（JPG/PNG/WEBP/GIF 最大5MB）をアップロードできます。
-- 保存先は `public/uploads/avatars/<userId>/...` で、`.gitignore` によりGit管理外です。
-- Googleから提供される画像より、アップロード画像が優先されます。
-- 初回はDBスキーマ更新が必要です（`User.image`列追加）。以下を実行してください。
-
-```bash
-npm run prisma:migrate -- --name add_user_image
-```
-
-## 今後の拡張案
-
-- 認証周りの細かな調整（プロフィール編集、画像、ロール）
-- 週/月ビューや連続達成日数の可視化
-- 通知/リマインダー(ブラウザ通知, メール等)
-- 並び替え、タグ、メモ機能
-- PWA対応（ホーム画面追加/オフライン）
-
----
+- Upload validation includes MIME/type and size checks. For stricter validation, add magic‑byte detection (e.g., `file-type`) and server‑side resize (e.g., `sharp`).
+- Set `NEXTAUTH_URL` to your production domain when deploying.
+- If you ever committed `.env` by mistake, rotate secrets and purge from history.
