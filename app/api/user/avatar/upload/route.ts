@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
   const file = form.get('file') as unknown as File | null
   if (!file) return NextResponse.json({ message: 'file is required' }, { status: 400 })
 
-  const max = 5 * 1024 * 1024 // 5MB
+  // Vercelのサーバレス制限回避のため 4MB に制限
+  const max = 4 * 1024 * 1024 // 4MB
   const size = (file as any).size as number | undefined
   if (!size || size <= 0) return NextResponse.json({ message: 'empty file' }, { status: 400 })
   if (size > max) return NextResponse.json({ message: 'file too large (<=5MB)' }, { status: 413 })
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${supabaseServiceRole}`,
+      'apikey': supabaseServiceRole,
       'Content-Type': mime,
       'x-upsert': 'true',
     },
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (!resUp.ok) {
-    let msg = 'storage upload failed'
+    let msg = `storage upload failed (status ${resUp.status})`
     try { const j = await resUp.json(); if (j?.message) msg = j.message } catch {}
     return NextResponse.json({ message: msg }, { status: 502 })
   }
