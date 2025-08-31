@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import ThemeToggle from '@/components/ThemeToggle'
+// テーマ切替はプロフィール内に移動
 import AuthButton from '@/components/AuthButton'
 
 type RoutineLite = { id: number; title: string; color: string }
@@ -59,11 +59,9 @@ export default function CalendarPage() {
   return (
     <main className="container py-8">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-display font-semibold">カレンダー</h1>
-        <div className="flex items-center gap-2">
+        <h1 className="text-xl font-display font-semibold whitespace-nowrap">カレンダー</h1>
+        <div className="flex items-center gap-2 whitespace-nowrap ml-auto">
           <a href="/" className="btn btn-ghost">戻る</a>
-          <ThemeToggle />
-          <span className="inline-block h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
           <AuthButton />
         </div>
       </header>
@@ -75,9 +73,9 @@ export default function CalendarPage() {
         </div>
       ) : (
       <div className="card mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 whitespace-nowrap">
           <button className="btn btn-ghost" onClick={() => setMonth(prev => addMonths(prev, -1))}>{'←'}</button>
-          <div className="text-lg font-medium">{monthLabel(month)}</div>
+          <div className="text-lg font-medium whitespace-nowrap">{monthLabel(month)}</div>
           <button className="btn btn-ghost" onClick={() => setMonth(prev => addMonths(prev, 1))}>{'→'}</button>
           <button className="btn btn-ghost" onClick={() => setMonth(new Date())}>今月</button>
         </div>
