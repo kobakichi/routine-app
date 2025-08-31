@@ -122,12 +122,14 @@ Put these in `.env` (see `.env.example`):
 
 All API endpoints are protected and scoped to the signed‑in user. A `User` record is created/updated on first access.
 
-## Avatar Uploads (local)
+## Avatar Uploads (Supabase Storage)
 
 - Open the user menu (top‑right) → “Upload Image” to upload JPG/PNG/WEBP/GIF up to 5MB
-- Files are saved under `public/uploads/avatars/<userId>/...` (excluded from Git by `.gitignore`)
-- Uploaded image takes precedence over the Google profile image; fallback is initials
-- Note: local filesystem uploads are not suitable for serverless production. Use S3/Cloudinary/etc. in such deployments.
+- In production (e.g. Vercel), uploads go to Supabase Storage (public bucket), and the public URL is stored in DB.
+- Configure env vars (see `.env.example`):
+  - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE`, `SUPABASE_BUCKET` (default: `avatars`)
+- Create a public bucket in Supabase (e.g., `avatars`) and ensure public read access.
+- The uploaded image takes precedence over the Google profile image; fallback is initials.
 
 ## Scripts
 

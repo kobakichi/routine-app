@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
-import path from 'path'
-import fs from 'fs/promises'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
@@ -25,30 +23,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'unsupported file type' }, { status: 400 })
   }
 
+  // Supabase Storage (public bucket) へのアップロード
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE
+  const bucket = process.env.SUPABASE_BUCKET || 'avatars'
+  if (!supabaseUrl || !supabaseServiceRole) {
+    return NextResponse.json({ message: 'supabase env is not configured' }, { status: 500 })
+  }
+
+  const buf = Buffer.from(await file.arrayBuffer())
   const name = (file as any).name as string | undefined
   const extFromName = name && name.includes('.') ? name.split('.').pop()!.toLowerCase() : undefined
   const extFromMime = mime.split('/').pop()
   const ext = (extFromName || extFromMime || 'png').replace(/[^a-z0-9]/g, '')
-
-  const buf = Buffer.from(await file.arrayBuffer())
-  const dir = path.join(process.cwd(), 'public', 'uploads', 'avatars', String(user!.id))
-  await fs.mkdir(dir, { recursive: true })
   const fname = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`
-  const absPath = path.join(dir, fname)
-  await fs.writeFile(absPath, buf)
+  const objectPath = `${user!.id}/${fname}`
 
-  // 以前のローカルファイルを削除（/uploads/avatars/... の場合のみ）
-  const existing = user!.image
-  if (existing && existing.startsWith('/uploads/avatars/')) {
-    try {
-      const oldAbs = path.join(process.cwd(), 'public', existing)
-      await fs.unlink(oldAbs)
-    } catch {}
+  const uploadUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(bucket)}/${objectPath}`
+  const resUp = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${supabaseServiceRole}`,
+      'Content-Type': mime,
+      'x-upsert': 'true',
+    },
+    body: buf,
+  })
+
+  if (!resUp.ok) {
+    let msg = 'storage upload failed'
+    try { const j = await resUp.json(); if (j?.message) msg = j.message } catch {}
+    return NextResponse.json({ message: msg }, { status: 502 })
   }
 
-  const publicPath = `/uploads/avatars/${user!.id}/${fname}`
-  await prisma.user.update({ where: { id: user!.id }, data: { image: publicPath } })
-
-  return NextResponse.json({ ok: true, image: publicPath })
+  // 公開バケット前提の公開URL
+  const publicUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(bucket)}/${objectPath}`
+  await prisma.user.update({ where: { id: user!.id }, data: { image: publicUrl } })
+  return NextResponse.json({ ok: true, image: publicUrl })
 }
-
