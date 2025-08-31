@@ -1,7 +1,6 @@
 "use client"
 
 import { signIn, signOut, useSession } from 'next-auth/react'
-import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
 
 export default function AuthButton() {
@@ -13,7 +12,23 @@ export default function AuthButton() {
     .slice(0, 1)
     .toUpperCase()
   const image = (data?.user as any)?.image as string | undefined
-  const { theme, setTheme } = useTheme()
+  type Mode = 'light' | 'dark' | 'system'
+  const [themeMode, setThemeMode] = useState<Mode>('system')
+  useEffect(() => {
+    try {
+      const m = (localStorage.getItem('theme') as Mode) || 'system'
+      setThemeMode(m)
+    } catch {}
+  }, [])
+  function applyTheme(mode: Mode) {
+    try {
+      const root = document.documentElement
+      const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      root.classList.toggle('dark', isDark)
+      localStorage.setItem('theme', mode)
+      setThemeMode(mode)
+    } catch {}
+  }
 
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -153,9 +168,9 @@ export default function AuthButton() {
               {(['light','system','dark'] as const).map(mode => (
                 <button
                   key={mode}
-                  className={`btn btn-ghost w-full justify-center text-xs ${theme===mode ? 'ring-1 ring-blue-400/50 dark:ring-blue-500/50' : ''}`}
-                  onClick={() => setTheme(mode)}
-                  aria-pressed={theme===mode}
+                  className={`btn btn-ghost w-full justify-center text-xs ${themeMode===mode ? 'ring-1 ring-blue-400/50 dark:ring-blue-500/50' : ''}`}
+                  onClick={() => applyTheme(mode)}
+                  aria-pressed={themeMode===mode}
                 >{mode==='light'?'Light':mode==='dark'?'Dark':'System'}</button>
               ))}
             </div>
