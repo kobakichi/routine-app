@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle'
 import AuthButton from '@/components/AuthButton'
-import { signIn } from 'next-auth/react'
 
 type RoutineLite = { id: number; title: string; color: string }
 
@@ -59,7 +58,7 @@ export default function CalendarPage() {
 
   return (
     <main className="container py-8">
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-display font-semibold">カレンダー</h1>
         <div className="flex items-center gap-2">
           <a href="/" className="btn btn-ghost">戻る</a>
@@ -71,8 +70,8 @@ export default function CalendarPage() {
 
       {unauthorized ? (
         <div className="card mb-4">
-          <p className="text-slate-600 dark:text-slate-300 mb-3">カレンダーを表示するにはログインしてください。</p>
-          <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
+          <p className="text-slate-600 dark:text-slate-300 whitespace-nowrap">カレンダーを表示するにはログインしてください。</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">右上のメニューからログインできます。</p>
         </div>
       ) : (
       <div className="card mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
