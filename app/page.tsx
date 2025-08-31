@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { buttonGradientFor, ColorName } from '@/lib/colors'
 import AuthButton from '@/components/AuthButton'
-import ThemeToggle from '@/components/ThemeToggle'
 
 type Routine = {
   id: number
@@ -123,10 +122,8 @@ export default function Page() {
           <h1 className="text-2xl font-display font-bold tracking-tight gradient-title">My Routine</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">1日のルーティーンをシンプルに管理</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <a href="/calendar" className="btn btn-ghost">カレンダー</a>
-          <ThemeToggle />
-          <span className="inline-block h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
           <AuthButton />
         </div>
       </header>

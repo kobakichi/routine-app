@@ -1,6 +1,7 @@
 "use client"
 
 import { signIn, signOut, useSession } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
 
 export default function AuthButton() {
@@ -12,6 +13,7 @@ export default function AuthButton() {
     .slice(0, 1)
     .toUpperCase()
   const image = (data?.user as any)?.image as string | undefined
+  const { theme, setTheme } = useTheme()
 
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -138,13 +140,26 @@ export default function AuthButton() {
         <div
           id="user-menu"
           ref={menuRef}
-          className="absolute right-0 mt-2 w-48 card p-1 shadow-xl z-50"
+          className="absolute right-0 mt-2 w-56 card p-1 shadow-xl z-50"
           role="menu"
           aria-label="ユーザーメニュー"
           tabIndex={-1}
           onBlur={onMenuBlur}
         >
           <div className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400 truncate" title={name}>{name}</div>
+          <div className="px-3 pt-1 pb-2">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">テーマ</div>
+            <div className="grid grid-cols-3 gap-1">
+              {(['light','system','dark'] as const).map(mode => (
+                <button
+                  key={mode}
+                  className={`btn btn-ghost w-full justify-center text-xs ${theme===mode ? 'ring-1 ring-blue-400/50 dark:ring-blue-500/50' : ''}`}
+                  onClick={() => setTheme(mode)}
+                  aria-pressed={theme===mode}
+                >{mode==='light'?'Light':mode==='dark'?'Dark':'System'}</button>
+              ))}
+            </div>
+          </div>
           <button className="btn btn-ghost w-full justify-start" onClick={() => setUploadOpen(true)}>画像をアップロード</button>
           <button className="btn btn-ghost w-full justify-start" onClick={() => signOut()}>ログアウト</button>
         </div>
