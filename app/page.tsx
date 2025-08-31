@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { buttonGradientFor, ColorName } from '@/lib/colors'
 import AuthButton from '@/components/AuthButton'
-import { signIn } from 'next-auth/react'
 import ThemeToggle from '@/components/ThemeToggle'
 
 type Routine = {
@@ -119,7 +118,7 @@ export default function Page() {
 
   return (
     <main className="container py-8">
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-display font-bold tracking-tight gradient-title">My Routine</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">1日のルーティーンをシンプルに管理</p>
@@ -154,9 +153,9 @@ export default function Page() {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {unauthorized ? (
-          <div className="text-slate-600 dark:text-slate-300 space-y-3">
-            <p>ルーティーンを表示するにはログインしてください。</p>
-            <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
+          <div className="text-slate-600 dark:text-slate-300 space-y-2">
+            <p className="whitespace-nowrap">ルーティーンを表示するにはログインしてください。</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">右上のメニューからログインできます。</p>
           </div>
         ) : loading ? (
           <div className="text-slate-500">読み込み中...</div>
