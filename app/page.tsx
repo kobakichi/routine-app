@@ -23,7 +23,9 @@ export default function Page() {
 
   const load = async () => {
     setLoading(true)
-    const res = await fetch('/api/routines', { cache: 'no-store' })
+    const today = new Date(); today.setHours(0,0,0,0)
+    const iso = `${today.getFullYear()}-${`${today.getMonth()+1}`.padStart(2,'0')}-${`${today.getDate()}`.padStart(2,'0')}`
+    const res = await fetch(`/api/routines?date=${iso}`, { cache: 'no-store' })
     if (res.status === 401) {
       setUnauthorized(true)
       setRoutines([])
@@ -88,7 +90,9 @@ export default function Page() {
     const current = routines.find(r => r.id === id)
     if (!current) return
     setRoutines(prev => prev.map(r => r.id === id ? { ...r, todayCompleted: !r.todayCompleted } : r))
-    const res = await fetch(`/api/routines/${id}/check`, { method: 'POST' })
+    const today = new Date(); today.setHours(0,0,0,0)
+    const iso = `${today.getFullYear()}-${`${today.getMonth()+1}`.padStart(2,'0')}-${`${today.getDate()}`.padStart(2,'0')}`
+    const res = await fetch(`/api/routines/${id}/check`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: iso }) })
     if (!res.ok) {
       // revert on failure
       setRoutines(prev => prev.map(r => r.id === id ? { ...r, todayCompleted: current.todayCompleted } : r))

@@ -145,3 +145,10 @@ All API endpoints are protected and scoped to the signed‑in user. A `User` rec
 - Upload validation includes MIME/type and size checks. For stricter validation, add magic‑byte detection (e.g., `file-type`) and server‑side resize (e.g., `sharp`).
 - Set `NEXTAUTH_URL` to your production domain when deploying.
 - If you ever committed `.env` by mistake, rotate secrets and purge from history.
+
+### Timezone / 日付の扱い
+
+- 「今日」の完了トグルと一覧の集計は、クライアント（ブラウザ）のローカル日付に合わせるため、フロントエンドから `YYYY-MM-DD` を送っています。
+  - `GET /api/routines?date=YYYY-MM-DD` – 一覧の「今日」判定に使用
+  - `POST /api/routines/:id/check` – リクエストボディに `{ date: 'YYYY-MM-DD' }`
+- これにより、サーバーのタイムゾーンがUTCでも、ユーザーのローカル日付に対して1日ズレる問題を避けます。

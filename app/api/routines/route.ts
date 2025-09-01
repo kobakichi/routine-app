@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth-helpers'
 import { toISODate } from '@/lib/date'
+import { dayRangeLocal, parseISODateLocal } from '@/lib/date'
 
-function todayRange() {
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 1)
-  return { start, end }
+function parseTodayRangeFromReq(req: NextRequest) {
+  const key = req.nextUrl.searchParams.get('date')?.trim()
+  if (key) {
+    const d = parseISODateLocal(key)
+    if (d) return dayRangeLocal(d)
+  }
+  return dayRangeLocal()
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { user, error } = await requireUser()
   if (error) return error
 
@@ -21,7 +23,7 @@ export async function GET() {
   })
 
   const ids = routines.map(r => r.id)
-  const { start, end } = todayRange()
+  const { start, end } = parseTodayRangeFromReq(req)
   const checks = ids.length > 0 ? await prisma.routineCheck.findMany({
     where: { routineId: { in: ids }, date: { gte: start, lt: end } },
     select: { routineId: true },
