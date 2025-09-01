@@ -1,16 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth-helpers'
+import { dayRangeLocal, parseISODateLocal } from '@/lib/date'
 
-function todayRange() {
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 1)
-  return { start, end }
+async function resolveDayRange(req: Request) {
+  // 優先度: クエリパラメータ ?date=YYYY-MM-DD -> JSON ボディ { date }
+  try {
+    const url = new URL(req.url)
+    const q = url.searchParams.get('date')?.trim()
+    if (q) {
+      const parsed = parseISODateLocal(q)
+      if (parsed) return dayRangeLocal(parsed)
+    }
+  } catch {}
+  try {
+    const body: any = await req.clone().json().catch(() => null)
+    if (body && typeof body.date === 'string') {
+      const parsed = parseISODateLocal(body.date)
+      if (parsed) return dayRangeLocal(parsed)
+    }
+  } catch {}
+  return dayRangeLocal()
 }
 
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   const { user, error } = await requireUser()
   if (error) return error
   const id = Number(params.id)
@@ -19,7 +32,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const own = await prisma.routine.findFirst({ where: { id, userId: user!.id }, select: { id: true } })
   if (!own) return NextResponse.json({ message: 'not found' }, { status: 404 })
 
-  const { start, end } = todayRange()
+  const { start, end } = await resolveDayRange(req)
   const existing = await prisma.routineCheck.findFirst({ where: { routineId: id, date: { gte: start, lt: end } } })
   if (existing) {
     await prisma.routineCheck.delete({ where: { id: existing.id } })
