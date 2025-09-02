@@ -91,7 +91,7 @@ export default function AuthButton() {
   }
 
   if (!isAuthed) {
-    return <button className="btn btn-primary" onClick={() => signIn('google')}>Googleでログイン</button>
+    return <button className="btn btn-primary !text-slate-900 dark:!text-white" onClick={() => signIn('google')}>Googleでログイン</button>
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
